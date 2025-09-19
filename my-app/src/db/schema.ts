@@ -1,6 +1,6 @@
 import { timestamp, pgTable, serial,date, integer, text, numeric } from 'drizzle-orm/pg-core';
 
-export const TAtable = pgTable('pavadinimai', {
+export const TAtable = pgTable('sprendimai', {
   id: serial('id').primaryKey(),
   eil_nr: integer('eil_nr').notNull(),
   rusis: text('rusis').notNull(),

@@ -1,12 +1,18 @@
 "use client";
-
+//reactIcons
+import { FaRegFile } from "react-icons/fa";
+import { MdKeyboardArrowDown } from "react-icons/md";
+import { MdKeyboardArrowUp } from "react-icons/md";
+//
 import { useEffect, useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   type ColumnDef,
+  getExpandedRowModel,
 } from "@tanstack/react-table";
+
 
 // ✅ type-only import so client bundle doesn’t pull server code
 import type { TableRow } from "@/db/schema";
@@ -18,21 +24,41 @@ const columns: ColumnDef<TableRow>[] = [
   { accessorKey: "istaigos_nr", header: "Įstaigos Nr." },
   { accessorKey: "priemimo_data", header: "Priėmimo data" },
   { accessorKey: "isigaliojimo_data", header: "Įsigaliojimo data" },
-  { accessorKey: "projektai_nuoroda", header: "Nuoroda" },
-  { accessorKey: "scraped_at", header: "Scraped" },
-  {
-    accessorKey: "ai_risk_score",
-    header: "AI Risk",
-    cell: (info) => {
-      const v = info.getValue() as string | null; // numeric -> string from pg
-      return v ? Number(v).toFixed(2) : "";
-    },
+  { id: "projektai_nuoroda", header: " Projektai_nuoroda",
+    cell: ({ row } ) => {
+      const value = row.original.projektai_nuoroda;
+
+      if(!value) return null;
+
+      const fullurl = `https://www.e-tar.lt/${value}`
+
+      return(
+        <a href={fullurl}> <FaRegFile /></a>
+          
+      )
+    }
+  
   },
-  { accessorKey: "ai_summary", header: "Santrauka" },
+  
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => (
+        <button
+    type="button"
+    onClick={() => row.toggleExpanded()}  
+    aria-expanded={row.getIsExpanded()}    
+    title={row.getIsExpanded() ? 'Collapse' : 'Expand'}
+  >
+    {row.getIsExpanded() ?  <MdKeyboardArrowDown/>: <MdKeyboardArrowUp />}    
+  </button>
+    ) 
+  },
 ];
 
 export default function TATable() {
   const [data, setData] = useState<TableRow[]>([]);
+  const [expanded,setExpanded] = useState({});
 
   useEffect(() => {
     fetch("/api/ta")
@@ -42,18 +68,23 @@ export default function TATable() {
   }, []);
 
   const table = useReactTable({
-    data,
-    columns,
+    data,columns,
+    state: {expanded},
+    onExpandedChange: setExpanded,
+    getRowCanExpand: () => true,
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
   });
 
   return (
-    <table>
+    <table className="w-[1500px] table-fixed">
       <thead>
         {table.getHeaderGroups().map((hg) => (
           <tr key={hg.id}>
             {hg.headers.map((h) => (
-              <th key={h.id}>
+              <th key={h.id} className={`border border-gray-200
+              ${h.column.id === 'pavadinimas' ? 'bg-yellow-50 text-blue-800 font-medium w-[450px]' : undefined}
+              `}>
                 {h.isPlaceholder
                   ? null
                   : flexRender(h.column.columnDef.header, h.getContext())}
@@ -63,15 +94,31 @@ export default function TATable() {
         ))}
       </thead>
       <tbody>
-        {table.getRowModel().rows.map((row) => (
+        {table.getRowModel().rows.flatMap((row) => [
           <tr key={row.id}>
             {row.getVisibleCells().map((cell) => (
-              <td key={cell.id}>
+              <td key={cell.id} className={`
+              px-4 py-2 border  border-gray-200
+              ${cell.column.id === 'pavadinimas' ? 'bg-yellow-50 text-blue-800 font-medium w-[450px]' : undefined}`}>
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </td>
             ))}
-          </tr>
-        ))}
+          </tr>,
+
+            row.getIsExpanded() && (
+              <tr key={`${row.id}-exp`} className="bg-gray-50">
+                <td colSpan={table.getVisibleLeafColumns().length}>
+                  <div className="p-4">
+                    <h4 className="font-semibold">AI Summary</h4>
+                    <p>{row.original.ai_summary ?? '—'}</p>
+                    <h4 className="font-semibold mt-2">Risk Score</h4>
+                    <p>{row.original.ai_risk_score ?? '—'}</p>
+                   </div>
+                </td>
+              </tr>
+            ),
+        
+        ].filter(Boolean))}
       </tbody>
     </table>
   );
