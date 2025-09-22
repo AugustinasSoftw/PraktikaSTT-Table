@@ -3,7 +3,10 @@
 import { FaRegFile } from "react-icons/fa";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { MdKeyboardArrowUp } from "react-icons/md";
-//
+//Components
+import Checkbox from "./Checkbox";
+
+
 import { useEffect, useState } from "react";
 import {
   useReactTable,
@@ -18,6 +21,26 @@ import {
 import type { TableRow } from "@/db/schema";
 
 const columns: ColumnDef<TableRow>[] = [
+ {
+    id: 'select',
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllRowsSelected()}
+        indeterminate={table.getIsSomeRowsSelected()}
+        onChange={table.getToggleAllRowsSelectedHandler()}
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        indeterminate={row.getIsSomeSelected?.()}
+        onChange={row.getToggleSelectedHandler()}
+      />
+    ),
+    size: 32, // optional: keep it narrow
+    enableSorting: false,
+    enableHiding: false,
+  },
   { accessorKey: "eil_nr", header: "Eil. nr" },
   { accessorKey: "rusis", header: "Rūšis" },
   { accessorKey: "pavadinimas", header: "Pavadinimas" },
@@ -59,7 +82,13 @@ const columns: ColumnDef<TableRow>[] = [
 export default function TATable() {
   const [data, setData] = useState<TableRow[]>([]);
   const [expanded,setExpanded] = useState({});
+  const [rowSelection, setRowSelection] = useState({});
+  const selectedKeys = rowSelection; 
+  useEffect(() => {
+        console.log("selected ids:", Object.keys(selectedKeys)); 
+}, [selectedKeys]);
 
+  
   useEffect(() => {
     fetch("/api/ta")
       .then((r) => r.json())
@@ -69,11 +98,13 @@ export default function TATable() {
 
   const table = useReactTable({
     data,columns,
-    state: {expanded},
+    state: {expanded, rowSelection},
     onExpandedChange: setExpanded,
     getRowCanExpand: () => true,
     getCoreRowModel: getCoreRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
   });
 
   return (
