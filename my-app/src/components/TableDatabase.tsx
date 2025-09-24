@@ -3,9 +3,10 @@
 import { FaRegFile } from "react-icons/fa";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { MdKeyboardArrowUp } from "react-icons/md";
+import Paggination from "./Pagination";
 //Components
 import Checkbox from "./Checkbox";
-
+import { NextNextButton,NextButton,BacktButton,BackBackButton } from "./ui/Buttons";
 
 import { useEffect, useState } from "react";
 import {
@@ -14,11 +15,13 @@ import {
   flexRender,
   type ColumnDef,
   getExpandedRowModel,
+  getPaginationRowModel,
 } from "@tanstack/react-table";
 
 
 // ✅ type-only import so client bundle doesn’t pull server code
 import type { TableRow } from "@/db/schema";
+
 
 const columns: ColumnDef<TableRow>[] = [
  {
@@ -102,12 +105,15 @@ export default function TATable() {
     onExpandedChange: setExpanded,
     getRowCanExpand: () => true,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
+    
   });
 
   return (
+    <div className="flex flex-col">
     <table className="w-[1500px] table-fixed">
       <thead>
         {table.getHeaderGroups().map((hg) => (
@@ -152,5 +158,15 @@ export default function TATable() {
         ].filter(Boolean))}
       </tbody>
     </table>
+  <div>Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</div>
+  <div className="flex flex-row"> 
+
+  
+        <Paggination table={table}/>
+  </div>
+   
+ 
+
+    </div>
   );
 }
