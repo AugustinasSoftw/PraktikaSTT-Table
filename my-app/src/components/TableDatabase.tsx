@@ -21,6 +21,8 @@ import {
 // ✅ type-only import so client bundle doesn’t pull server code
 import type { TableRow } from "@/db/schema";
 
+
+
 const columns: ColumnDef<TableRow>[] = [
   {
     id: "select",
@@ -42,7 +44,9 @@ const columns: ColumnDef<TableRow>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  { accessorKey: "eil_nr", header: "Eil. nr" },
+  { id: "eil_nr", header: "Eil_nr", cell: ({row}) => {
+    return  row.index + 1;
+  } },
   { accessorKey: "rusis", header: "Rūšis" },
   { accessorKey: "pavadinimas", header: "Pavadinimas" },
   { accessorKey: "istaigos_nr", header: "Įstaigos Nr." },
@@ -83,26 +87,23 @@ const columns: ColumnDef<TableRow>[] = [
   },
 ];
 
-export default function TATable() {
+export default function Table() {
+  
   const [data, setData] = useState<TableRow[]>([]);
   const [expanded, setExpanded] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const selectedKeys = rowSelection;
-  useEffect(() => {
-    console.log("selected ids:", Object.keys(selectedKeys));
-  }, [selectedKeys]);
 
-  useEffect(() => {
-    fetch("/api/ta")
-      .then((r) => r.json())
-      .then((rows: TableRow[]) => setData(rows))
-      .catch(console.error);
-  }, []);
+  //Pagination declarations
+  const [totalRows, setTotalRows] = useState(0);
+  const [pageIndex, setPageIndex] = useState(0);
 
-  const table = useReactTable({
+  const pageSize = 10;
+
+    const table = useReactTable({
     data,
     columns,
-    state: { expanded, rowSelection },
+    state: { expanded, rowSelection},
     onExpandedChange: setExpanded,
     getRowCanExpand: () => true,
     getCoreRowModel: getCoreRowModel(),
@@ -111,6 +112,28 @@ export default function TATable() {
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
   });
+
+  useEffect(() => {
+    console.log("selected ids:", Object.keys(selectedKeys));
+  }, [selectedKeys]);
+
+   const currentPage = table.getState().pagination.pageIndex + 1;
+ 
+  useEffect(() => {
+    
+    (async () =>{
+      const offset = pageIndex * pageSize;
+      const res = await fetch(`/api/ta?limit=${pageSize}&offset=${offset}`);
+      const json = await res.json();
+      setData(json);
+      setTotalRows(json.length);
+       console.log(json.length);
+    })();
+
+  },[pageIndex]);
+
+ 
+  console.log(currentPage);
 
   return (
     <div className="flex flex-col">
