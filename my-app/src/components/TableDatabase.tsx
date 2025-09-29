@@ -1,4 +1,12 @@
 "use client";
+
+import type { RowData } from '@tanstack/react-table';
+
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData extends RowData> {
+    offset: number;
+  }
+}
 //reactIcons
 import { FaRegFile } from "react-icons/fa";
 import { MdKeyboardArrowDown } from "react-icons/md";
@@ -44,9 +52,11 @@ const columns: ColumnDef<TableRow>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  { id: "eil_nr", header: "Eil_nr", cell: ({row}) => {
-    return  row.index + 1;
-  } },
+  { id: "eil_nr", header: "Eil_nr", cell: ({row, table}) => {
+    const offs = table.options.meta?.offset ?? 0;
+    return offs + row.index +1;
+  }
+  },
   { accessorKey: "rusis", header: "Rūšis" },
   { accessorKey: "pavadinimas", header: "Pavadinimas" },
   { accessorKey: "istaigos_nr", header: "Įstaigos Nr." },
@@ -54,7 +64,7 @@ const columns: ColumnDef<TableRow>[] = [
   { accessorKey: "isigaliojimo_data", header: "Įsigaliojimo data" },
   {
     id: "projektai_nuoroda",
-    header: " Projektai_nuoroda",
+    header: " Projektai nuoroda",
     cell: ({ row }) => {
       const value = row.original.projektai_nuoroda;
 
@@ -63,7 +73,7 @@ const columns: ColumnDef<TableRow>[] = [
       const fullurl = `https://www.e-tar.lt/${value}`;
 
       return (
-        <a href={fullurl}>
+        <a className="flex items-center justify-center" href={fullurl}>
           {" "}
           <FaRegFile />
         </a>
@@ -73,7 +83,7 @@ const columns: ColumnDef<TableRow>[] = [
 
   {
     id: "actions",
-    header: "Actions",
+    header: "Analizė",
     cell: ({ row }) => (
       <button
         type="button"
@@ -89,6 +99,8 @@ const columns: ColumnDef<TableRow>[] = [
 
 export default function Table() {
   
+  
+
   const [data, setData] = useState<TableRow[]>([]);
   const [expanded, setExpanded] = useState({});
   const [rowSelection, setRowSelection] = useState({});
@@ -97,8 +109,42 @@ export default function Table() {
   //Pagination declarations
   const [totalRows, setTotalRows] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
+  const [offset, setOffset] = useState(0);
+  //Loading
+  const [isLoading, setIsLoading] = useState(true);
+
 
   const pageSize = 10;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let showTimer: any;
+    (async () =>{
+      setIsLoading(true);
+      
+      try{
+      const newOffset = pageIndex * pageSize;
+      setOffset(newOffset);
+      const res = await fetch(`/api/ta?limit=${pageSize}&offset=${newOffset}`,{
+        signal: controller.signal,
+      });
+      const isFirstLoad = isLoading && data.length === 0;
+      const json = await res.json();
+      setData(json.rows);
+      setTotalRows(json.totalRows);
+    }catch (e){
+      if((e as any).name !== 'AbortError') console.error(e);
+    }finally{
+      clearTimeout(showTimer);
+     
+      setIsLoading(false);
+    }
+    })();
+    return () => 
+      {clearTimeout(showTimer)
+       controller.abort();}
+  },[pageIndex]);
+
 
     const table = useReactTable({
     data,
@@ -111,40 +157,27 @@ export default function Table() {
     getExpandedRowModel: getExpandedRowModel(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
+    meta: {
+      offset,
+    }
   });
-
-  useEffect(() => {
-    console.log("selected ids:", Object.keys(selectedKeys));
-  }, [selectedKeys]);
-
-   const currentPage = table.getState().pagination.pageIndex + 1;
  
-  useEffect(() => {
-    
-    (async () =>{
-      const offset = pageIndex * pageSize;
-      const res = await fetch(`/api/ta?limit=${pageSize}&offset=${offset}`);
-      const json = await res.json();
-      setData(json);
-      setTotalRows(json.length);
-       console.log(json.length);
-    })();
-
-  },[pageIndex]);
-
- 
-  console.log(currentPage);
+const isFirstLoad = isLoading && data.length === 0;
+const rowHeight = 44;
 
   return (
-    <div className="flex flex-col">
-      <table className="w-[1500px] table-fixed">
+    <div className="flex flex-col rounded-lg overflow-hidden">
+      <div className="w-[1300px] border h-24 offset bg-blue-300 flex items-center justify-center">
+          <Paggination isLoading={isLoading} pageSize={pageSize} totalRows={totalRows} table={table} setPageIndex={setPageIndex}/>
+      </div>
+      <table className="w-[1300px] table-fixed text-center">
         <thead>
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((h) => (
                 <th
                   key={h.id}
-                  className={`border border-gray-200
+                  className={`border border-t-0 border-gray-200
               ${
                 h.column.id === "pavadinimas"
                   ? "bg-yellow-50 text-blue-800 font-medium w-[450px]"
@@ -160,7 +193,20 @@ export default function Table() {
             </tr>
           ))}
         </thead>
-        <tbody>
+        {isFirstLoad ? (
+       <tbody>
+        {Array.from({ length: pageSize }).map((_, i) => (
+          <tr key={i} style={{ height: rowHeight }}>
+            {table.getAllLeafColumns().map((col) => (
+              <td key={col.id} className="px-3">
+                <div className="h-3 w-3/4 rounded bg-gray-200 animate-pulse" />
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+        ) :
+       ( <tbody>
           {table.getRowModel().rows.flatMap((row) =>
             [
               <tr key={row.id}>
@@ -168,7 +214,7 @@ export default function Table() {
                   <td
                     key={cell.id}
                     className={`
-              px-4 py-2 border  border-gray-200
+              px-4 py-2 border border-b-0 border-gray-200
               ${
                 cell.column.id === "pavadinimas"
                   ? "bg-yellow-50 text-blue-800 font-medium w-[450px]"
@@ -195,13 +241,12 @@ export default function Table() {
             ].filter(Boolean)
           )}
         </tbody>
+        )
+        }
       </table>
-      <div>
-        Page {table.getState().pagination.pageIndex + 1} of{" "}
-        {table.getPageCount()}
-      </div>
-      <div className="flex flex-row">
-        <Paggination table={table} />
+      
+     <div className="w-[1300px] border h-24 offset  bg-blue-300">
+          <Paggination isLoading={isLoading} totalRows={totalRows} table={table} pageSize={pageSize} setPageIndex={setPageIndex}/>
       </div>
     </div>
   );
