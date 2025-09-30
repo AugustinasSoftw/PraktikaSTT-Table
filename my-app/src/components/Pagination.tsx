@@ -13,50 +13,59 @@ type PaginationProps<TableRow> = {
     setPageIndex: (page: number) => void;
     pageSize: number;
     isLoading: boolean;
+    pageIndex: number;
 }
 
-export default function Paggination<TableRow>({ totalRows, table, setPageIndex, isLoading, pageSize }: PaginationProps<TableRow>) {
+export default function Paggination<TableRow>({ totalRows, table, setPageIndex, isLoading = false, pageSize, pageIndex }: PaginationProps<TableRow>) {
 
-     const totalNumberofPages = totalRows / pageSize;
-     console.log(totalNumberofPages);
+     const totalPages = Math.ceil(totalRows / pageSize);
+     console.log(totalPages);
+     const maxButtons = 10;
+     const current = pageIndex + 1;
+
+    let start = Math.max(1, current - Math.floor((maxButtons - 1) / 2));
+    let end = Math.min(totalPages, start + maxButtons - 1);
+    start = Math.max(1, end - maxButtons + 1);
+
+  const pages: number[] = [];
+  for (let p = start; p <= end; p++) pages.push(p);
 
   return (
-    <div className="flex flex-row">
-      <button
-        disabled={!table.getCanPreviousPage()}
-        onClick={() => table.firstPage()}
-      >
-        <BackBackButton />
+      <div className="flex gap-2 items-center">
+        
+          <button>
+            <BackBackButton/>
+          </button>
+          <button>
+            <BacktButton/>
+          </button>       
+      {pages.map((p) => {
+        const active = p === current;
+        return (
+          <button
+            key={p}
+            disabled={isLoading || active}
+            onClick={() => setPageIndex(p - 1)}   // pass 0-based index
+            aria-current={active ? "page" : undefined}
+            className={
+              "inline-flex h-9 w-9 items-center justify-center rounded-md ring-1 shadow-sm transition " +
+              (active
+                ? "bg-zinc-800 text-white ring-zinc-800"
+                : "bg-zinc-700 text-zinc-200 ring-zinc-700/60 hover:ring-zinc-500")
+            }
+          >
+            {p}
+          </button>
+        );
+      })}
+
+      <button>
+        <NextButton/>
       </button>
-      <button
-        disabled={!table.getCanPreviousPage()}
-        onClick={() => table.previousPage()}
-      >
-        <BacktButton />
-      </button>
-<div>
-    <div>
-        {Array.from({ length: 4}).map((_,i) => (
-            <button
-             disabled={isLoading}
-             key={i+1}
-             onClick={() => setPageIndex(i)}
-             className="inline-flex items-center justify-center rounded-md bg-zinc-700 h-9 w-9 text-zinc-200 shadow-sm ring-1 ring-zinc-700/60 transition-all duration-150 hover:bg-zinc-800/70 hover:shadow-md hover:ring-zinc-600"
-              >{i+1}</button>
-        ))}
-    </div>
-</div>
-      <button
-        disabled={!table.getCanNextPage()}
-        onClick={() => table.nextPage()}
-      >
-        <NextButton />
-      </button>
-      <button
-        disabled={!table.getCanNextPage()}
-        onClick={() => table.lastPage()}
-      >
-        <NextNextButton />
+
+
+      <button>
+        <NextNextButton/>
       </button>
     </div>
   );
