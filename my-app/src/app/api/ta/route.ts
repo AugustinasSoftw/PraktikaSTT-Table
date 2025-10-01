@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/client';
 import { TAtable } from '@/db/schema';
-import { ilike, sql } from 'drizzle-orm';
+import { and, gte, ilike, sql } from 'drizzle-orm';
 
 export async function GET(request: Request) {
 try{
@@ -14,7 +14,7 @@ try{
   const decodePlus = (v: string | null) => (v ? v.replace(/\+/g, " ").trim() : undefined); // + -> space
 
   const rusys = decodePlus(searchParams.get("rusys"));
-  const hasDazNav = decodePlus(searchParams.get("dazniausiaiNaudNav"));
+  const highRisk = searchParams.has("dazniausiaiNaudNav");
 
    const DEFAULT_LIMIT = 10;
    const MAX_LIMIT = 100;
@@ -25,24 +25,29 @@ try{
 
    const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
    const whereRusys = rusys ? ilike(TAtable.rusis, `%${rusys}`) : undefined;
+   const whereRisk = highRisk ? gte(TAtable.ai_risk_score, '0.7') : undefined; 
+ // combine predicates
+const whereAll =
+  whereRusys && whereRisk ? and(whereRusys, whereRisk) : (whereRusys ?? whereRisk);
 
-   
-   const rows = await(
-    whereRusys
-      ? db.select().from(TAtable).limit(limit).offset(offset).where(whereRusys)
-      : db.select().from(TAtable).limit(limit).offset(offset)
-  );
+// rows
+const rows = await (
+  whereAll
+    ? db.select().from(TAtable).where(whereAll).limit(limit).offset(offset)
+    : db.select().from(TAtable).limit(limit).offset(offset)
+);
 
-   const [{ count }] = await (
-    whereRusys 
-    ? db.select({ count: sql<number>`count(*)` }).from(TAtable).where(whereRusys)
+// count
+const [{ count }] = await (
+  whereAll
+    ? db.select({ count: sql<number>`count(*)` }).from(TAtable).where(whereAll)
     : db.select({ count: sql<number>`count(*)` }).from(TAtable)
-  )
+);
+
 
    return NextResponse.json({
     rows,
     totalRows: Number(count),
-    rusys
    })
 }
 catch(err){
