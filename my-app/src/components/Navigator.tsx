@@ -21,8 +21,6 @@ export default function Navigator({setSorting,sorting}:NavigatorProps){
      ]
 
      const [selected,setSelected] = useState(false);
-     
-     console.log(sorting);
   
     return(
     <div className="mr-8 w-[380px] h-[600px] border flex flex-col rounded-lg border-gray-200 overflow-hidden">

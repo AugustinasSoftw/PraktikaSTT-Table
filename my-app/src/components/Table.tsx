@@ -16,7 +16,7 @@ import Paggination from "./Pagination";
 import Checkbox from "./Checkbox";
 import Navigator from './Navigator';
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -111,15 +111,24 @@ export default function Table() {
   const [offset, setOffset] = useState(0);
   //Navigation declars
   const [sorting, setSorting] = useState<SelectedProps | null>(null);
-  //Loading
-  const [isLoading, setIsLoading] = useState(true);
   const filterParams = new URLSearchParams(
     Object.entries(sorting ?? {}).filter(([_, value]) => value)
   );
-  console.log(filterParams.toString())
-  const pageSize = 5;
+  const qs = filterParams.toString();
+  const prevQsRef = useRef(qs);
+  //Loading
+  const [isLoading, setIsLoading] = useState(true);
+  const pageSize = 10;
 
   useEffect(() => {
+
+    if (prevQsRef.current !== qs && pageIndex !== 0) {
+    setPageIndex(0);
+    prevQsRef.current = qs;
+    return;
+  }
+
+
     const controller = new AbortController();
     let showTimer: any;
     (async () =>{
@@ -128,25 +137,26 @@ export default function Table() {
       try{
       const newOffset = pageIndex * pageSize;
       setOffset(newOffset);
-      const res = await fetch(`/api/ta?limit=${pageSize}&offset=${newOffset}&filter`,{
+      const res = await fetch(`/api/ta?limit=${pageSize}&offset=${newOffset}&${qs}`,{
         signal: controller.signal,
       });
       const isFirstLoad = isLoading && data.length === 0;
       const json = await res.json();
       setData(json.rows);
       setTotalRows(json.totalRows);
+      prevQsRef.current = qs;
     }catch (e){
       if((e as any).name !== 'AbortError') console.error(e);
     }finally{
       clearTimeout(showTimer);
-     
+      
       setIsLoading(false);
     }
     })();
     return () => 
       {clearTimeout(showTimer)
        controller.abort();}
-  },[pageIndex]);
+  },[pageIndex,qs]);
 
 
     const table = useReactTable({
@@ -165,8 +175,8 @@ export default function Table() {
   });
  
 const isFirstLoad = isLoading && data.length === 0;
-const rowHeight = 44;
-console.log(sorting);
+const rowHeight = 74;
+
   return (<div className='flex flex-row'>
     <Navigator setSorting={setSorting} sorting={sorting}/>
     
@@ -197,7 +207,7 @@ console.log(sorting);
             </tr>
           ))}
         </thead>
-        {isFirstLoad ? (
+        {isLoading ? (
        <tbody>
         {Array.from({ length: pageSize }).map((_, i) => (
           <tr key={i} style={{ height: rowHeight }}>

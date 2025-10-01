@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/client';
 import { TAtable } from '@/db/schema';
-import { sql } from 'drizzle-orm';
+import { ilike, sql } from 'drizzle-orm';
 
 export async function GET(request: Request) {
 try{
@@ -24,20 +24,25 @@ try{
       : DEFAULT_LIMIT;
 
    const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
-  
-   const rows = await db.
-   select()
-   .from(TAtable)
-   .limit(limit)
-   .offset(offset);
+   const whereRusys = rusys ? ilike(TAtable.rusis, `%${rusys}`) : undefined;
 
-   const [{ count }] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(TAtable);
+   
+   const rows = await(
+    whereRusys
+      ? db.select().from(TAtable).limit(limit).offset(offset).where(whereRusys)
+      : db.select().from(TAtable).limit(limit).offset(offset)
+  );
+
+   const [{ count }] = await (
+    whereRusys 
+    ? db.select({ count: sql<number>`count(*)` }).from(TAtable).where(whereRusys)
+    : db.select({ count: sql<number>`count(*)` }).from(TAtable)
+  )
 
    return NextResponse.json({
     rows,
     totalRows: Number(count),
+    rusys
    })
 }
 catch(err){
