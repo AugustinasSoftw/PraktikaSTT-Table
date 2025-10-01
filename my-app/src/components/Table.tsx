@@ -81,6 +81,27 @@ const columns: ColumnDef<TableRow>[] = [
     },
   },
 
+    {
+    id: "ai_risk_score",
+    header: "Risk of corrupcy",
+    cell: ({row}) => {
+      const raw = row.original.ai_risk_score;               
+      const score = raw == null ? NaN : parseFloat(raw);
+
+
+      return(
+      <div className={`border w-4 h-4 border-black rounded-full inline-flex items-center justify-center
+      ${
+        score >= 0.7
+        ? "bg-red-700"
+        : score >= 0.5
+        ? "bg-yellow-400"
+        : "bg-green-500"
+      }
+      `}></div>
+    )}
+  },
+
   {
     id: "actions",
     header: "Analizė",
@@ -90,11 +111,14 @@ const columns: ColumnDef<TableRow>[] = [
         onClick={() => row.toggleExpanded()}
         aria-expanded={row.getIsExpanded()}
         title={row.getIsExpanded() ? "Collapse" : "Expand"}
+        className='cursor-pointer'
       >
         {row.getIsExpanded() ? <MdKeyboardArrowDown /> : <MdKeyboardArrowUp />}
       </button>
     ),
   },
+
+
 ];
 
 export default function Table() {
@@ -197,6 +221,11 @@ const rowHeight = 74;
                   ? "bg-yellow-50 text-blue-800 font-medium w-[450px]"
                   : undefined
               }
+               ${
+                h.column.id === "eil_nr"
+                  ? " font-medium w-[85px]"
+                  : undefined
+              }
               `}
                 >
                   {h.isPlaceholder
@@ -233,6 +262,11 @@ const rowHeight = 74;
                 cell.column.id === "pavadinimas"
                   ? "bg-yellow-50 text-blue-800 font-medium w-[450px]"
                   : undefined
+              }
+              ${
+                cell.column.id === "eil_nr"
+                  ? " font-medium w-[85px]"
+                  : undefined
               }`}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -241,16 +275,71 @@ const rowHeight = 74;
               </tr>,
 
               row.getIsExpanded() && (
-                <tr key={`${row.id}-exp`} className="bg-gray-50">
-                  <td colSpan={table.getVisibleLeafColumns().length}>
-                    <div className="p-4">
-                      <h4 className="font-semibold">AI Summary</h4>
-                      <p>{row.original.ai_summary ?? "—"}</p>
-                      <h4 className="font-semibold mt-2">Risk Score</h4>
-                      <p>{row.original.ai_risk_score ?? "—"}</p>
-                    </div>
-                  </td>
-                </tr>
+                  <tr key={`${row.id}-exp`}>
+  <td colSpan={table.getVisibleLeafColumns().length} className="p-0">
+    <div className="border-t bg-white/60">
+      <div className=" mb-3 rounded-b-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          {/* Summary */}
+          <div className="min-w-0 md:max-w-[80%]">
+            <p className="text-base font-semibold uppercase tracking-wider text-gray-500">
+              Dirbtinio intelekto išvada
+            </p>
+            <p className="mt-2 text-lg leading-relaxed text-gray-800 whitespace-pre-line">
+              {row.original.ai_summary ?? "—"}
+            </p>
+          </div>
+
+          {/* Risk panel */}
+          <div className="shrink-0 md:text-right">
+            <p className="text-base font-semibold uppercase tracking-wider text-gray-500">
+              Rizika
+            </p>
+
+            {/* score badge */}
+            <span
+              className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset
+                ${
+                  !row.original.ai_risk_score
+                    ? "bg-gray-100 text-gray-700 ring-gray-200"
+                    : parseFloat(row.original.ai_risk_score) >= 0.7
+                    ? "bg-red-100 text-red-700 ring-red-200"
+                    : parseFloat(row.original.ai_risk_score) >= 0.5
+                    ? "bg-yellow-100 text-yellow-800 ring-yellow-200"
+                    : "bg-green-100 text-green-700 ring-green-200"
+                }`}
+            >
+              {Number.isFinite(parseFloat(row.original.ai_risk_score ?? ""))
+                ? parseFloat(row.original.ai_risk_score!).toFixed(3)
+                : "—"}
+            </span>
+
+            {/* progress bar (width via Tailwind fractions, no inline style) */}
+            <div className="mt-2 h-2 w-40 rounded-full bg-gray-200">
+              <div
+                className={`h-2 rounded-full
+                  ${
+                    !row.original.ai_risk_score
+                      ? "w-0 bg-gray-300"
+                      : parseFloat(row.original.ai_risk_score) >= 0.9
+                      ? "w-full bg-red-500"
+                      : parseFloat(row.original.ai_risk_score) >= 0.7
+                      ? "w-4/5 bg-red-500"
+                      : parseFloat(row.original.ai_risk_score) >= 0.5
+                      ? "w-3/5 bg-yellow-400"
+                      : parseFloat(row.original.ai_risk_score) >= 0.3
+                      ? "w-2/5 bg-green-500"
+                      : "w-1/5 bg-green-500"
+                  }`}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </td>
+</tr>
+
               ),
             ].filter(Boolean)
           )}

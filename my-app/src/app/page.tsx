@@ -5,14 +5,17 @@ import Navigator from "@/components/Navigator";
 
 export default function Home() {
   return (<>
+  <div className="">
     <Header/>
    
    
-    <div className="flex justify-end pr-16 pt-14 w-full content-between">
-      
-      
-
-      <Table/>
+     <div className="w-full  pt-14 flex">
+    <div className="flex-1 min-w-0">
+      <div className="overflow-x-auto flex items-center justify-center">
+        <Table />
+      </div>
+    </div>
+  </div>
     </div>
    
    </>
