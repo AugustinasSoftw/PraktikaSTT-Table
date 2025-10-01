@@ -28,7 +28,7 @@ import {
 
 // ✅ type-only import so client bundle doesn’t pull server code
 import type { TableRow } from "@/db/schema";
-
+import type { SelectedProps } from '@/app/types/navigation';
 
 
 const columns: ColumnDef<TableRow>[] = [
@@ -104,18 +104,19 @@ export default function Table() {
   const [data, setData] = useState<TableRow[]>([]);
   const [expanded, setExpanded] = useState({});
   const [rowSelection, setRowSelection] = useState({});
-  const selectedKeys = rowSelection;
-
+ 
   //Pagination declarations
   const [totalRows, setTotalRows] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
   const [offset, setOffset] = useState(0);
   //Navigation declars
-  const [sorting, setSorting] = useState('lapas')
+  const [sorting, setSorting] = useState<SelectedProps | null>(null);
   //Loading
   const [isLoading, setIsLoading] = useState(true);
-
-
+  const filterParams = new URLSearchParams(
+    Object.entries(sorting ?? {}).filter(([_, value]) => value)
+  );
+  console.log(filterParams.toString())
   const pageSize = 5;
 
   useEffect(() => {
@@ -127,7 +128,7 @@ export default function Table() {
       try{
       const newOffset = pageIndex * pageSize;
       setOffset(newOffset);
-      const res = await fetch(`/api/ta?limit=${pageSize}&offset=${newOffset}`,{
+      const res = await fetch(`/api/ta?limit=${pageSize}&offset=${newOffset}&filter`,{
         signal: controller.signal,
       });
       const isFirstLoad = isLoading && data.length === 0;
@@ -167,7 +168,7 @@ const isFirstLoad = isLoading && data.length === 0;
 const rowHeight = 44;
 console.log(sorting);
   return (<div className='flex flex-row'>
-    <Navigator setSorting={setSorting}/>
+    <Navigator setSorting={setSorting} sorting={sorting}/>
     
     <div className="flex flex-col rounded-lg overflow-hidden">
       <div className="w-[1300px] border h-24 offset bg-blue-300 flex items-center justify-center">

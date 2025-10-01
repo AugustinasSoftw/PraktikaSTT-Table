@@ -25,7 +25,6 @@ export default function Paggination<TableRow>({
   pageIndex,
 }: PaginationProps<TableRow>) {
   const totalPages = Math.ceil(totalRows / pageSize);
-  console.log(totalPages);
   const maxButtons = 10;
   const current = pageIndex + 1;
 

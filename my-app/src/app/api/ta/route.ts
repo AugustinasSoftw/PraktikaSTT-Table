@@ -6,9 +6,15 @@ import { sql } from 'drizzle-orm';
 export async function GET(request: Request) {
 try{
   const { searchParams} = new URL(request.url);
+  
 
   const rawLimit = Number(searchParams.get("limit"));
   const rawOffset = Number(searchParams.get("offset"));
+
+  const decodePlus = (v: string | null) => (v ? v.replace(/\+/g, " ").trim() : undefined); // + -> space
+
+  const rusys = decodePlus(searchParams.get("rusys"));
+  const hasDazNav = decodePlus(searchParams.get("dazniausiaiNaudNav"));
 
    const DEFAULT_LIMIT = 10;
    const MAX_LIMIT = 100;
@@ -32,7 +38,6 @@ try{
    return NextResponse.json({
     rows,
     totalRows: Number(count),
-    offset
    })
 }
 catch(err){
