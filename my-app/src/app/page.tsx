@@ -4,20 +4,23 @@ import Header from "@/components/Header";
 import Navigator from "@/components/Navigator";
 
 export default function Home() {
-  return (<>
-  <div className="">
-    <Header/>
-   
-   
-     <div className="w-full  pt-14 flex">
-    <div className="flex-1 min-w-0">
-      <div className="overflow-x-auto flex items-center justify-center">
-        <Table />
-      </div>
+ return (
+    <div className="min-h-screen bg-slate-50">
+      
+      <header className="backdrop-blur border-b">
+        
+          <Header/>
+        
+      </header>
+
+      <main className="mt-10">
+
+              
+              <div className="w-full">
+                  <Table/>
+              </div>
+
+      </main>
     </div>
-  </div>
-    </div>
-   
-   </>
   );
 }

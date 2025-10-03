@@ -3,7 +3,7 @@ import {
   BacktButton,
   NextButton,
   NextNextButton,
-} from "./ui/Buttons";
+} from "./ComponentHelpers/Buttons/Buttons";
 import { Table } from "@tanstack/react-table";
 import type { TableRow } from "@/db/schema";
 
@@ -27,6 +27,9 @@ export default function Paggination<TableRow>({
   const totalPages = Math.ceil(totalRows / pageSize);
   const maxButtons = 10;
   const current = pageIndex + 1;
+
+
+  
 
   let start = Math.max(1, current - Math.floor((maxButtons - 1) / 2));
   let end = Math.min(totalPages, start + maxButtons - 1);
@@ -56,10 +59,10 @@ export default function Paggination<TableRow>({
             onClick={() => setPageIndex(p - 1)} // pass 0-based index
             aria-current={active ? "page" : undefined}
             className={
-              "inline-flex h-9 w-9 items-center cursor-pointer justify-center rounded-md ring-1 shadow-sm transition " +
+              "inline-flex h-9 w-9 border-gray-400 border items-center cursor-pointer justify-center rounded-md ring-1 shadow-sm transition hover:bg-zinc-900 " +
               (active
-                ? "bg-zinc-800 text-white ring-zinc-800"
-                : "bg-zinc-700 text-zinc-200 ring-zinc-700/60 hover:ring-zinc-500")
+                ? "bg-zinc-900 text-white ring-zinc-800"
+                : "bg-zinc-700 text-zinc-200 ring-zinc-700/60")
             }
           >
             {p}

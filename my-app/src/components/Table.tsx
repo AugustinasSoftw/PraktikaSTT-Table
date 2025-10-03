@@ -11,11 +11,14 @@ declare module '@tanstack/react-table' {
 import { FaRegFile } from "react-icons/fa";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { MdKeyboardArrowUp } from "react-icons/md";
-import Paggination from "./Pagination";
+import { FaFilter } from "react-icons/fa";
+import { PiShareFatLight } from "react-icons/pi";
 //Components
-import Checkbox from "./Checkbox";
+import Checkbox from "./ComponentHelpers/Table/Checkbox";
 import Navigator from './Navigator';
-
+import Paggination from "./Pagination";
+import Share from './Share';
+// Util
 import { useEffect, useRef, useState } from "react";
 import {
   useReactTable,
@@ -48,7 +51,7 @@ const columns: ColumnDef<TableRow>[] = [
         onChange={row.getToggleSelectedHandler()}
       />
     ),
-    size: 32, // optional: keep it narrow
+    size: 35, 
     enableSorting: false,
     enableHiding: false,
   },
@@ -83,7 +86,7 @@ const columns: ColumnDef<TableRow>[] = [
 
     {
     id: "ai_risk_score",
-    header: "Risk of corrupcy",
+    header: "Korupcijos rizika",
     cell: ({row}) => {
       const raw = row.original.ai_risk_score;               
       const score = raw == null ? NaN : parseFloat(raw);
@@ -123,12 +126,12 @@ const columns: ColumnDef<TableRow>[] = [
 
 export default function Table() {
   
-  
-
+  // Declarations //
   const [data, setData] = useState<TableRow[]>([]);
   const [expanded, setExpanded] = useState({});
+  //Selection
   const [rowSelection, setRowSelection] = useState({});
- 
+
   //Pagination declarations
   const [totalRows, setTotalRows] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
@@ -142,17 +145,21 @@ export default function Table() {
   const prevQsRef = useRef(qs);
   //Loading
   const [isLoading, setIsLoading] = useState(true);
-  const pageSize = 10;
+  const pageSize = 6;
+  const rowHeight = 74;
+  // Filter hook
+  const [openFilter, setOpenFilter] = useState(false);
+  const [openShare, setOpenShare] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null!);
+  // Declarations //
 
+  //Fetching
   useEffect(() => {
-
     if (prevQsRef.current !== qs && pageIndex !== 0) {
     setPageIndex(0);
     prevQsRef.current = qs;
     return;
   }
-
-
     const controller = new AbortController();
     let showTimer: any;
     (async () =>{
@@ -181,7 +188,7 @@ export default function Table() {
       {clearTimeout(showTimer)
        controller.abort();}
   },[pageIndex,qs]);
-
+//Fetching \\
 
     const table = useReactTable({
     data,
@@ -198,32 +205,94 @@ export default function Table() {
     }
   });
  
-const isFirstLoad = isLoading && data.length === 0;
-const rowHeight = 74;
+  const selectedFromIds = table.getSelectedRowModel().flatRows.map(r => r.original);
+  console.log(selectedFromIds);
+  console.log(openShare);
+  return (<>
+       
 
-  return (<div className='flex flex-row'>
-    <Navigator setSorting={setSorting} sorting={sorting}/>
-    
-    <div className="flex flex-col rounded-lg overflow-hidden">
-      <div className="w-[1300px] border h-24 offset bg-blue-300 flex items-center justify-center">
-          <Paggination pageIndex={pageIndex} isLoading={isLoading} pageSize={pageSize} totalRows={totalRows} table={table} setPageIndex={setPageIndex}/>
-      </div>
-      <table className="w-[1300px] table-fixed text-center">
+    <div className="flex flex-col rounded-lg max-w-[1400px] min-w-[1300px] mx-auto ">
+      <div className="w-full bg-zinc-700 rounded-t-xl">
+  <div className="mx-auto max-w-[1400px] h-20 grid grid-cols-[1fr_auto_1fr] items-center px-4">
+    {/* left */}
+    <button
+      onClick={() => setOpenFilter(p => !p)}
+      className="justify-self-start inline-flex items-center gap-2 rounded-lg bg-zinc-700 text-white border border-gray-400
+                 px-3 py-2 shadow-sm ring-1 ring-white/10 hover:bg-zinc-800 transition"
+      aria-label="Filtrai"
+    >
+      <FaFilter className="text-base" />
+      <span className="hidden sm:inline">Filtrai</span>
+    </button>
+
+    {/* center */}
+    <div className="justify-self-center">
+      <Paggination
+        pageIndex={pageIndex}
+        isLoading={isLoading}
+        pageSize={pageSize}
+        totalRows={totalRows}
+        table={table}
+        setPageIndex={setPageIndex}
+      />
+    </div>
+
+    {/* right */}
+    <button
+      type="button"
+      onClick={() => setOpenShare(p => !p)}
+      className="justify-self-end inline-flex items-center gap-2 rounded-lg bg-zinc-700 text-white border border-gray-400
+                 px-3 py-2 shadow-sm ring-1 ring-white/10 hover:bg-zinc-900 transition"
+      aria-label="Bendrinti"
+      ref={btnRef}
+    >
+      <PiShareFatLight size={24} />
+      <span className="hidden sm:inline">Bendrinti</span>
+    </button>
+  </div>
+
+  {openShare && (
+    <Share
+      selectedFromIds={selectedFromIds}
+      openShare={openShare}
+      setOpenShare={setOpenShare}
+      btnRef={btnRef}
+    />
+  )}
+</div>
+
+
+{openFilter && (
+  <Navigator
+    openFilter={openFilter}
+    setOpenFilter={setOpenFilter}
+    sorting={sorting}
+    setSorting={setSorting}
+  />
+)}
+
+
+      <table className="w-full table-fixed font-mono bg-gray-100 text-center">
         <thead>
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((h) => (
                 <th
                   key={h.id}
-                  className={`border border-t-0 border-gray-200
+                  className={`border border-t-0 border-black
               ${
                 h.column.id === "pavadinimas"
-                  ? "bg-yellow-50 text-blue-800 font-medium w-[450px]"
+                  ? "  w-[470px] "
+                  : undefined
+              }
+              ${
+                h.column.id === "select"
+                  ? "  w-[85px] "
                   : undefined
               }
                ${
                 h.column.id === "eil_nr"
-                  ? " font-medium w-[85px]"
+                  ? " w-[85px]"
                   : undefined
               }
               `}
@@ -257,10 +326,10 @@ const rowHeight = 74;
                   <td
                     key={cell.id}
                     className={`
-              px-4 py-2 border border-b-0 border-gray-200
+              px-4 py-2 border border-b-0 border-gray-900
               ${
                 cell.column.id === "pavadinimas"
-                  ? "bg-yellow-50 text-blue-800 font-medium w-[450px]"
+                  ? "text  font-medium w-[470px]"
                   : undefined
               }
               ${
@@ -348,10 +417,10 @@ const rowHeight = 74;
         }
       </table>
       
-     <div className="w-[1300px] border h-24 offset bg-blue-300 flex items-center justify-center">
+     <div className=" bg-zinc-700 rounded-t-none rounded-lg w-full border h-24 offset  flex items-center justify-center mb-10">
           <Paggination pageIndex={pageIndex} isLoading={isLoading} totalRows={totalRows} table={table} pageSize={pageSize} setPageIndex={setPageIndex}/>
       </div>
     </div>
-    </div>
+    </>
   );
 }
