@@ -11,8 +11,10 @@ declare module "@tanstack/react-table" {
 import { FaRegFile } from "react-icons/fa";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { MdKeyboardArrowUp } from "react-icons/md";
+import { MdKeyboardArrowRight } from "react-icons/md";
 import { FaFilter } from "react-icons/fa";
 import { PiShareFatLight } from "react-icons/pi";
+import { IoMdCloseCircleOutline } from "react-icons/io";
 //Components
 import Checkbox from "./ComponentHelpers/Table/Checkbox";
 import Navigator from "./Navigator";
@@ -155,7 +157,7 @@ export default function Table() {
   // Filter hook
   const [openFilter, setOpenFilter] = useState(false);
   const [openShare, setOpenShare] = useState(false);
-  const btnRef = useRef<HTMLButtonElement>(null!);
+
   // Declarations //
 
   //Fetching
@@ -217,68 +219,74 @@ export default function Table() {
   const selectedFromIds = table
     .getSelectedRowModel()
     .flatRows.map((r) => r.original);
-  console.log(selectedFromIds);
-  console.log(openShare);
+ 
+ 
   return (
     <>
       <div className="flex flex-col rounded-lg max-w-[1300px] min-w-[1200px] mx-auto">
-        <div className="w-full bg-zinc-700 rounded-t-xl">
-          <div className="mx-auto max-w-[1400px] h-20 grid grid-cols-[1fr_auto_1fr] items-center px-4">
-            {/* left */}
-            <button
-              onClick={() => setOpenFilter((p) => !p)}
-              className="justify-self-start inline-flex items-center gap-2 rounded-lg bg-zinc-700 text-white border border-gray-400
-                 px-3 py-2 shadow-sm ring-1 ring-white/10 hover:bg-zinc-800 transition"
-              aria-label="Filtrai"
-            >
-              <FaFilter className="text-base" />
-              <span className="hidden sm:inline">Filtrai</span>
-            </button>
+        <div className="w-full bg-zinc-800/95 rounded-t-xl p-2">
+  <div className="mx-auto max-w-[1400px] h-20 grid grid-cols-3 items-center px-4">
 
-            {/* center */}
-            <div className="justify-self-center">
-              <Paggination
-                pageIndex={pageIndex}
-                isLoading={isLoading}
-                pageSize={pageSize}
-                totalRows={totalRows}
-                table={table}
-                setPageIndex={setPageIndex}
-              />
-            </div>
+    {/* left column: filter + chips */}
+    <div className="col-start-1 flex items-center gap-3 overflow-x-auto">
+      <button
+        onClick={() => setOpenFilter(p => !p)}
+        className="inline-flex items-center gap-2 rounded-lg bg-zinc-800/95 text-white border border-gray-400
+                   px-3 py-2 shadow-sm ring-1 ring-white/10 hover:bg-zinc-900 transition cursor-pointer"
+        aria-label="Filtrai"
+      >
+        <FaFilter className="text-base" />
+        <span className="hidden sm:inline mr-1">Filtrai</span>
+      </button>
 
-            {/* right */}
-            <button
-              type="button"
-              onClick={() => setOpenShare((p) => !p)}
-              className="justify-self-end inline-flex items-center gap-2 rounded-lg bg-zinc-700 text-white border border-gray-400
-                 px-3 py-2 shadow-sm ring-1 ring-white/10 hover:bg-zinc-900 transition"
-              aria-label="Bendrinti"
-              ref={btnRef}
-            >
-              <PiShareFatLight size={24} />
-              <span className="hidden sm:inline">Bendrinti</span>
-            </button>
-          </div>
-
-          {openShare && (
-            <Share
-              selectedFromIds={selectedFromIds}
-              openShare={openShare}
-              setOpenShare={setOpenShare}
-              btnRef={btnRef}
-            />
-          )}
-
-          {openFilter && (
-            <Navigator
-              openFilter={openFilter}
-              setOpenFilter={setOpenFilter}
-              sorting={sorting}
-              setSorting={setSorting}
-            />
+      {sorting && Object.values(sorting).some(v => v) && (
+        <div className="text-white p-2 text-sm flex items-center gap-2 flex-wrap">
+          {Object.entries(sorting ?? {}).map(([key, value], i) =>
+            value ? (
+              <div  onClick={() =>
+                    setSorting(prev => (prev ? { ...prev, [key]: "" } : prev))
+                  } key={i} className="flex items-center gap-1 border border-white rounded-lg px-3 py-1 cursor-pointer">
+                <span>{String(value)}</span>
+                  <IoMdCloseCircleOutline size={18}/>
+              </div>
+            ) : null
           )}
         </div>
+      )}
+    </div>
+
+    {/* center column: pagination */}
+    <div className="col-start-2 justify-self-center">
+      <Paggination
+        pageIndex={pageIndex}
+        isLoading={isLoading}
+        pageSize={pageSize}
+        totalRows={totalRows}
+        table={table}
+        setPageIndex={setPageIndex}
+      />
+    </div>
+
+    {/* right column: share */}
+    <div className="col-start-3 justify-self-end">
+      <button
+        type="button"
+        onClick={() => setOpenShare(p => !p)}
+        className="inline-flex items-center gap-2 rounded-lg bg-zinc-800/95 text-white border border-gray-400
+                   px-3 py-2 shadow-sm ring-1 ring-white/10 hover:bg-zinc-900 transition cursor-pointer"
+        aria-label="Bendrinti"
+        
+      >
+        <PiShareFatLight size={24} />
+        <span className="hidden sm:inline">Bendrinti</span>
+      </button>
+    </div>
+  </div>
+
+  {openShare && <Share {...{ selectedFromIds, openShare, setOpenShare}} />}
+  {openFilter && <Navigator {...{ openFilter, setOpenFilter, sorting, setSorting }} />}
+</div>
+
 
         <table className="w-full table-fixed font-sans text-center bg-gray-200 text-sm">
           <thead>
@@ -302,7 +310,7 @@ export default function Table() {
             ))}
           </thead>
           {isLoading ? (
-            <tbody>
+            <tbody className="">
               {Array.from({ length: pageSize }).map((_, i) => (
                 <tr key={i} style={{ height: rowHeight }}>
                   {table.getAllLeafColumns().map((col) => (
@@ -421,7 +429,7 @@ export default function Table() {
           )}
         </table>
 
-        <div className=" bg-zinc-700 rounded-t-none rounded-lg w-full border h-24 offset  flex items-center justify-center mb-10">
+        <div className=" bg-zinc-800/95 rounded-t-none rounded-lg w-full border h-24 offset  flex items-center justify-center mb-10">
           <Paggination
             pageIndex={pageIndex}
             isLoading={isLoading}

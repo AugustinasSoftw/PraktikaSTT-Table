@@ -62,7 +62,7 @@ export default function Paggination<TableRow>({
               "inline-flex h-9 w-9 border-gray-400 border items-center cursor-pointer justify-center rounded-md ring-1 shadow-sm transition hover:bg-zinc-900 " +
               (active
                 ? "bg-zinc-900 text-white ring-zinc-800"
-                : "bg-zinc-700 text-zinc-200 ring-zinc-700/60")
+                : "bg-zinc-800/95 text-zinc-200 ring-zinc-700/60")
             }
           >
             {p}

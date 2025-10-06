@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/client';
 import { TAtable } from '@/db/schema';
-import { and, gte, ilike, sql } from 'drizzle-orm';
+import { and, desc, gte, ilike, sql } from 'drizzle-orm';
 
 export async function GET(request: Request) {
 try{
@@ -23,6 +23,7 @@ try{
       ? Math.min(Math.max(rawLimit, 1), MAX_LIMIT)
       : DEFAULT_LIMIT;
 
+   const order = desc(TAtable.priemimo_data);
    const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
    const whereRusys = rusys ? ilike(TAtable.rusis, `%${rusys}`) : undefined;
    const whereRisk = highRisk ? gte(TAtable.ai_risk_score, '0.7') : undefined; 
@@ -33,8 +34,8 @@ const whereAll =
 // rows
 const rows = await (
   whereAll
-    ? db.select().from(TAtable).where(whereAll).limit(limit).offset(offset)
-    : db.select().from(TAtable).limit(limit).offset(offset)
+    ? db.select().from(TAtable).where(whereAll).orderBy(order).limit(limit).offset(offset)
+    : db.select().from(TAtable).limit(limit).orderBy(order).offset(offset)
 );
 
 // count
