@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { IoMdClose } from 'react-icons/io';
-import type { SelectedProps } from '@/app/types/navigation';
+import { useEffect, useState } from "react";
+import { IoMdClose } from "react-icons/io";
+import type { SelectedProps } from "@/app/types/navigation";
+import { IoIosArrowDown } from "react-icons/io";
 
 type NavigatorProps = {
   openFilter: boolean;
@@ -17,91 +18,88 @@ export default function Navigator({
   openFilter,
   setOpenFilter,
 }: NavigatorProps) {
-  const rusys = ['Įsakymas', 'Potvarkis', 'Nutarimas', 'Dekretas', 'Rezoliucija'];
-
-  const dazniausiaiNaudNavigatoriai = ['Aukšta korupcijos rizika'];
-
+  //
+  const rusys = [
+    "Įsakymas",
+    "Potvarkis",
+    "Nutarimas",
+    "Dekretas",
+    "Rezoliucija",
+  ];
+  //
+  const dazniausiaiNaudNavigatoriai = ["Aukšta korupcijos rizika"];
+  //
   const [selected, setSelected] = useState(false);
-
-  // Close on ESC + lock body scroll while openFilter
-  useEffect(() => {
-    if (!openFilter) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpenFilter(false);
-    document.addEventListener('keydown', onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [openFilter, setOpenFilter]);
+  const [DNNopen, setDNNOpen] = useState(false);
+  const [Ropen, setROpen] = useState(false);
 
   if (!openFilter) return null;
 
+  console.log(DNNopen);
+
   return (
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
-      {/* Backdrop (outside click closes) */}
-      <div className="absolute inset-0 bg-black/40" onClick={() => setOpenFilter(false)} />
+    <div className="relative flex justify-start">
+      <div className="w-[420px] rounded-lg mt-1 bg-zinc-700 text-zinc-100 shadow-2xl ring-1 ring-black/10 p-2 absolute z-50">
+        <div className="w-full h-16 font-bold items-center flex pl-3 pr-2 text-xl">
+          <span className="">Filtrai</span>
+          <button
+            onClick={() => setOpenFilter(false)}
+            className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-black/10 cursor-pointer"
+            aria-label="Uždaryti"
+          >
+            <IoMdClose />
+          </button>
+        </div>
 
-      {/* Popup container */}
-      <div className="absolute inset-0 flex items-start justify-center p-6 pointer-events-none">
-        {/* Panel (stop propagation so inside clicks don't close) */}
-        <div
-          className="relative mr-0 w-[380px] h-[600px]  flex flex-col rounded-lg overflow-hidden bg-white shadow-xl pointer-events-auto"
-          onClick={(e) => e.stopPropagation()} 
-        >
-          {/* Header */}
-          <div className="bg-blue-300 w-full h-16 font-bold items-center flex pl-4 pr-2 text-2xl">
-            <span>Navigatoriai</span>
-            <button
-              onClick={() => setOpenFilter(false)}
-              className="ml-auto inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-black/10"
-              aria-label="Uždaryti"
-            >
-              <IoMdClose />
-            </button>
-          </div>
+        {/* Content (scrollable if long) */}
+        <div className="flex flex-col px-4 mt-2 text-xl overflow-y-auto">
+          {sorting && Object.values(sorting).some((v) => v) && (
+            <div>
+              <span className="font-semibold">Pažymėti navigatoriai:</span>
+              <br />
 
-          {/* Content (scrollable if long) */}
-          <div className="flex flex-col px-4 mt-2 text-xl overflow-y-auto">
-            {sorting && Object.values(sorting).some((v) => v) && (
-              <div>
-                <span className="font-semibold">Pažymėti navigatoriai:</span>
-                <br />
-
-                <div className="flex flex-col gap-1 mt-1">
-                  {Object.entries(sorting ?? {}).map(([key, value], index) =>
-                    value ? (
-                      <div key={index} className="flex items-center gap-2">
-                        <span>{String(value)}</span>
-                        <button
-                          onClick={() =>
-                            setSorting((prev) => (prev ? { ...prev, [key]: '' } : prev))
-                          }
-                          className="flex items-center justify-center rounded hover:bg-black/10"
-                          aria-label="Pašalinti filtrą"
-                        >
-                          <IoMdClose className="font-bold" />
-                        </button>
-                      </div>
-                    ) : null
-                  )}
-                </div>
-                <div className="my-2 h-px bg-gray-300 mx-1" />
+              <div className="flex flex-col gap-1 mt-1">
+                {Object.entries(sorting ?? {}).map(([key, value], index) =>
+                  value ? (
+                    <div key={index} className="flex items-center gap-2">
+                      <span>{String(value)}</span>
+                      <button
+                        onClick={() =>
+                          setSorting((prev) =>
+                            prev ? { ...prev, [key]: "" } : prev
+                          )
+                        }
+                        className="flex items-center justify-center rounded hover:bg-black/10"
+                        aria-label="Pašalinti filtrą"
+                      >
+                        <IoMdClose className="font-bold" />
+                      </button>
+                    </div>
+                  ) : null
+                )}
               </div>
-            )}
+              <div className="my-2 h-px bg-gray-300 mx-1" />
+            </div>
+          )}
 
-            {!sorting?.dazniausiaiNaudNav && (
-              <div className="flex flex-col mt-2">
-                <span className="font-semibold mb-1">Dažniausiai naudojami navigatoriai</span>
+          <div>
+            <button
+              onClick={() => setDNNOpen((p) => !p)}
+              className="text-lg flex flex-row items-center justify-center gap-x-2"
+            >
+              <IoIosArrowDown />
+              Dažniausiai naudojami navigatoriai
+            </button>
+            {DNNopen && (
+              <li>
                 {dazniausiaiNaudNavigatoriai.map((r) => (
-                  <label key={r} className="pb-1 pl-1 flex items-center gap-2">
+                  <ul key={r} className="pb-1 pl-1 flex items-center gap-2">
                     <input
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelected(true);
                           setSorting((prev) => ({
-                            ...(prev ?? { dazniausiaiNaudNav: '', rusys: '' }),
+                            ...(prev ?? { dazniausiaiNaudNav: "", rusys: "" }),
                             dazniausiaiNaudNav: r,
                           }));
                         }
@@ -110,23 +108,31 @@ export default function Navigator({
                       type="checkbox"
                     />
                     <span className="text-xl">{r}</span>
-                  </label>
+                  </ul>
                 ))}
-                <div className="my-2 h-px bg-gray-300 mx-1" />
-              </div>
+              </li>
             )}
+          </div>
 
-            {!sorting?.rusys && (
-              <div className="flex flex-col">
-                <span className="font-semibold mb-1">Rūšys</span>
+          <div>
+            <button
+              onClick={() => setROpen((p) => !p)}
+              className="text-lg flex flex-row items-center justify-center gap-x-2"
+            >
+              <IoIosArrowDown />
+              Rušys
+            </button>
+
+            {Ropen && (
+              <li>
                 {rusys.map((r) => (
-                  <label key={r} className="pb-1 pl-1 flex items-center gap-2">
+                  <ul key={r} className="pb-1 pl-1 flex items-center gap-2">
                     <input
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelected(true);
                           setSorting((prev) => ({
-                            ...(prev ?? { dazniausiaiNaudNav: '', rusys: '' }),
+                            ...(prev ?? { dazniausiaiNaudNav: "", rusys: "" }),
                             rusys: r,
                           }));
                         }
@@ -135,13 +141,19 @@ export default function Navigator({
                       type="checkbox"
                     />
                     <span className="text-xl">{r}</span>
-                  </label>
+                  </ul>
                 ))}
-              </div>
+              </li>
             )}
           </div>
         </div>
       </div>
+      {/* Close*/}
+      <div
+        className="fixed inset-0 z-40"
+        onClick={() => setOpenFilter(false)}
+      />
+      {/* Close*/}
     </div>
   );
 }

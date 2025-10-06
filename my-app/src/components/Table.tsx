@@ -1,8 +1,8 @@
 "use client";
 
-import type { RowData } from '@tanstack/react-table';
+import type { RowData } from "@tanstack/react-table";
 
-declare module '@tanstack/react-table' {
+declare module "@tanstack/react-table" {
   interface TableMeta<TData extends RowData> {
     offset: number;
   }
@@ -15,9 +15,9 @@ import { FaFilter } from "react-icons/fa";
 import { PiShareFatLight } from "react-icons/pi";
 //Components
 import Checkbox from "./ComponentHelpers/Table/Checkbox";
-import Navigator from './Navigator';
+import Navigator from "./Navigator";
 import Paggination from "./Pagination";
-import Share from './Share';
+import Share from "./Share";
 // Util
 import { useEffect, useRef, useState } from "react";
 import {
@@ -31,8 +31,7 @@ import {
 
 // ✅ type-only import so client bundle doesn’t pull server code
 import type { TableRow } from "@/db/schema";
-import type { SelectedProps } from '@/app/types/navigation';
-
+import type { SelectedProps } from "@/app/types/navigation";
 
 const columns: ColumnDef<TableRow>[] = [
   {
@@ -51,14 +50,17 @@ const columns: ColumnDef<TableRow>[] = [
         onChange={row.getToggleSelectedHandler()}
       />
     ),
-    size: 35, 
+    size: 35,
     enableSorting: false,
     enableHiding: false,
   },
-  { id: "eil_nr", header: "Eil_nr", cell: ({row, table}) => {
-    const offs = table.options.meta?.offset ?? 0;
-    return offs + row.index +1;
-  }
+  {
+    id: "eil_nr",
+    header: "Eil_nr",
+    cell: ({ row, table }) => {
+      const offs = table.options.meta?.offset ?? 0;
+      return offs + row.index + 1;
+    },
   },
   { accessorKey: "rusis", header: "Rūšis" },
   { accessorKey: "pavadinimas", header: "Pavadinimas" },
@@ -76,7 +78,11 @@ const columns: ColumnDef<TableRow>[] = [
       const fullurl = `https://www.e-tar.lt/${value}`;
 
       return (
-        <a className="flex items-center justify-center" href={fullurl}>
+        <a
+          className="flex items-center justify-center"
+          href={fullurl}
+          target="_blank"
+        >
           {" "}
           <FaRegFile />
         </a>
@@ -84,25 +90,27 @@ const columns: ColumnDef<TableRow>[] = [
     },
   },
 
-    {
+  {
     id: "ai_risk_score",
     header: "Korupcijos rizika",
-    cell: ({row}) => {
-      const raw = row.original.ai_risk_score;               
+    cell: ({ row }) => {
+      const raw = row.original.ai_risk_score;
       const score = raw == null ? NaN : parseFloat(raw);
 
-
-      return(
-      <div className={`border w-4 h-4 border-black rounded-full inline-flex items-center justify-center
+      return (
+        <div
+          className={`border w-4 h-4 border-black rounded-full inline-flex items-center justify-center
       ${
         score >= 0.7
-        ? "bg-red-700"
-        : score >= 0.5
-        ? "bg-yellow-400"
-        : "bg-green-500"
+          ? "bg-red-700"
+          : score >= 0.5
+          ? "bg-yellow-400"
+          : "bg-green-500"
       }
-      `}></div>
-    )}
+      `}
+        ></div>
+      );
+    },
   },
 
   {
@@ -114,18 +122,15 @@ const columns: ColumnDef<TableRow>[] = [
         onClick={() => row.toggleExpanded()}
         aria-expanded={row.getIsExpanded()}
         title={row.getIsExpanded() ? "Collapse" : "Expand"}
-        className='cursor-pointer'
+        className="cursor-pointer"
       >
         {row.getIsExpanded() ? <MdKeyboardArrowDown /> : <MdKeyboardArrowUp />}
       </button>
     ),
   },
-
-
 ];
 
 export default function Table() {
-  
   // Declarations //
   const [data, setData] = useState<TableRow[]>([]);
   const [expanded, setExpanded] = useState({});
@@ -156,44 +161,48 @@ export default function Table() {
   //Fetching
   useEffect(() => {
     if (prevQsRef.current !== qs && pageIndex !== 0) {
-    setPageIndex(0);
-    prevQsRef.current = qs;
-    return;
-  }
+      setPageIndex(0);
+      prevQsRef.current = qs;
+      return;
+    }
     const controller = new AbortController();
     let showTimer: any;
-    (async () =>{
+    (async () => {
       setIsLoading(true);
-      
-      try{
-      const newOffset = pageIndex * pageSize;
-      setOffset(newOffset);
-      const res = await fetch(`/api/ta?limit=${pageSize}&offset=${newOffset}&${qs}`,{
-        signal: controller.signal,
-      });
-      const isFirstLoad = isLoading && data.length === 0;
-      const json = await res.json();
-      setData(json.rows);
-      setTotalRows(json.totalRows);
-      prevQsRef.current = qs;
-    }catch (e){
-      if((e as any).name !== 'AbortError') console.error(e);
-    }finally{
-      clearTimeout(showTimer);
-      
-      setIsLoading(false);
-    }
-    })();
-    return () => 
-      {clearTimeout(showTimer)
-       controller.abort();}
-  },[pageIndex,qs]);
-//Fetching \\
 
-    const table = useReactTable({
+      try {
+        const newOffset = pageIndex * pageSize;
+        setOffset(newOffset);
+        const res = await fetch(
+          `/api/ta?limit=${pageSize}&offset=${newOffset}&${qs}`,
+          {
+            signal: controller.signal,
+          }
+        );
+        const isFirstLoad = isLoading && data.length === 0;
+        const json = await res.json();
+        setData(json.rows);
+        setTotalRows(json.totalRows);
+        prevQsRef.current = qs;
+      } catch (e) {
+        if ((e as any).name !== "AbortError") console.error(e);
+      } finally {
+        clearTimeout(showTimer);
+
+        setIsLoading(false);
+      }
+    })();
+    return () => {
+      clearTimeout(showTimer);
+      controller.abort();
+    };
+  }, [pageIndex, qs]);
+  //Fetching \\
+
+  const table = useReactTable({
     data,
     columns,
-    state: { expanded, rowSelection},
+    state: { expanded, rowSelection },
     onExpandedChange: setExpanded,
     getRowCanExpand: () => true,
     getCoreRowModel: getCoreRowModel(),
@@ -202,131 +211,118 @@ export default function Table() {
     onRowSelectionChange: setRowSelection,
     meta: {
       offset,
-    }
+    },
   });
- 
-  const selectedFromIds = table.getSelectedRowModel().flatRows.map(r => r.original);
+
+  const selectedFromIds = table
+    .getSelectedRowModel()
+    .flatRows.map((r) => r.original);
   console.log(selectedFromIds);
   console.log(openShare);
-  return (<>
-       
-
-    <div className="flex flex-col rounded-lg max-w-[1400px] min-w-[1300px] mx-auto ">
-      <div className="w-full bg-zinc-700 rounded-t-xl">
-  <div className="mx-auto max-w-[1400px] h-20 grid grid-cols-[1fr_auto_1fr] items-center px-4">
-    {/* left */}
-    <button
-      onClick={() => setOpenFilter(p => !p)}
-      className="justify-self-start inline-flex items-center gap-2 rounded-lg bg-zinc-700 text-white border border-gray-400
+  return (
+    <>
+      <div className="flex flex-col rounded-lg max-w-[1300px] min-w-[1200px] mx-auto">
+        <div className="w-full bg-zinc-700 rounded-t-xl">
+          <div className="mx-auto max-w-[1400px] h-20 grid grid-cols-[1fr_auto_1fr] items-center px-4">
+            {/* left */}
+            <button
+              onClick={() => setOpenFilter((p) => !p)}
+              className="justify-self-start inline-flex items-center gap-2 rounded-lg bg-zinc-700 text-white border border-gray-400
                  px-3 py-2 shadow-sm ring-1 ring-white/10 hover:bg-zinc-800 transition"
-      aria-label="Filtrai"
-    >
-      <FaFilter className="text-base" />
-      <span className="hidden sm:inline">Filtrai</span>
-    </button>
+              aria-label="Filtrai"
+            >
+              <FaFilter className="text-base" />
+              <span className="hidden sm:inline">Filtrai</span>
+            </button>
 
-    {/* center */}
-    <div className="justify-self-center">
-      <Paggination
-        pageIndex={pageIndex}
-        isLoading={isLoading}
-        pageSize={pageSize}
-        totalRows={totalRows}
-        table={table}
-        setPageIndex={setPageIndex}
-      />
-    </div>
+            {/* center */}
+            <div className="justify-self-center">
+              <Paggination
+                pageIndex={pageIndex}
+                isLoading={isLoading}
+                pageSize={pageSize}
+                totalRows={totalRows}
+                table={table}
+                setPageIndex={setPageIndex}
+              />
+            </div>
 
-    {/* right */}
-    <button
-      type="button"
-      onClick={() => setOpenShare(p => !p)}
-      className="justify-self-end inline-flex items-center gap-2 rounded-lg bg-zinc-700 text-white border border-gray-400
+            {/* right */}
+            <button
+              type="button"
+              onClick={() => setOpenShare((p) => !p)}
+              className="justify-self-end inline-flex items-center gap-2 rounded-lg bg-zinc-700 text-white border border-gray-400
                  px-3 py-2 shadow-sm ring-1 ring-white/10 hover:bg-zinc-900 transition"
-      aria-label="Bendrinti"
-      ref={btnRef}
-    >
-      <PiShareFatLight size={24} />
-      <span className="hidden sm:inline">Bendrinti</span>
-    </button>
-  </div>
+              aria-label="Bendrinti"
+              ref={btnRef}
+            >
+              <PiShareFatLight size={24} />
+              <span className="hidden sm:inline">Bendrinti</span>
+            </button>
+          </div>
 
-  {openShare && (
-    <Share
-      selectedFromIds={selectedFromIds}
-      openShare={openShare}
-      setOpenShare={setOpenShare}
-      btnRef={btnRef}
-    />
-  )}
-</div>
+          {openShare && (
+            <Share
+              selectedFromIds={selectedFromIds}
+              openShare={openShare}
+              setOpenShare={setOpenShare}
+              btnRef={btnRef}
+            />
+          )}
 
+          {openFilter && (
+            <Navigator
+              openFilter={openFilter}
+              setOpenFilter={setOpenFilter}
+              sorting={sorting}
+              setSorting={setSorting}
+            />
+          )}
+        </div>
 
-{openFilter && (
-  <Navigator
-    openFilter={openFilter}
-    setOpenFilter={setOpenFilter}
-    sorting={sorting}
-    setSorting={setSorting}
-  />
-)}
-
-
-      <table className="w-full table-fixed font-mono bg-gray-100 text-center">
-        <thead>
-          {table.getHeaderGroups().map((hg) => (
-            <tr key={hg.id}>
-              {hg.headers.map((h) => (
-                <th
-                  key={h.id}
-                  className={`border border-t-0 border-black
-              ${
-                h.column.id === "pavadinimas"
-                  ? "  w-[470px] "
-                  : undefined
-              }
-              ${
-                h.column.id === "select"
-                  ? "  w-[85px] "
-                  : undefined
-              }
-               ${
-                h.column.id === "eil_nr"
-                  ? " w-[85px]"
-                  : undefined
-              }
+        <table className="w-full table-fixed font-sans text-center bg-gray-200 text-sm">
+          <thead>
+            {table.getHeaderGroups().map((hg) => (
+              <tr key={hg.id}>
+                {hg.headers.map((h) => (
+                  <th
+                    key={h.id}
+                    className={`border border-t-0 border-black bg-white  
+              ${h.column.id === "pavadinimas" ? "  w-[470px] " : undefined}
+              ${h.column.id === "select" ? "  w-[85px] " : undefined}
+               ${h.column.id === "eil_nr" ? " w-[85px]" : undefined}
               `}
-                >
-                  {h.isPlaceholder
-                    ? null
-                    : flexRender(h.column.columnDef.header, h.getContext())}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        {isLoading ? (
-       <tbody>
-        {Array.from({ length: pageSize }).map((_, i) => (
-          <tr key={i} style={{ height: rowHeight }}>
-            {table.getAllLeafColumns().map((col) => (
-              <td key={col.id} className="px-3">
-                <div className="h-3 w-3/4 rounded bg-gray-200 animate-pulse" />
-              </td>
+                  >
+                    {h.isPlaceholder
+                      ? null
+                      : flexRender(h.column.columnDef.header, h.getContext())}
+                  </th>
+                ))}
+              </tr>
             ))}
-          </tr>
-        ))}
-      </tbody>
-        ) :
-       ( <tbody>
-          {table.getRowModel().rows.flatMap((row) =>
-            [
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className={`
-              px-4 py-2 border border-b-0 border-gray-900
+          </thead>
+          {isLoading ? (
+            <tbody>
+              {Array.from({ length: pageSize }).map((_, i) => (
+                <tr key={i} style={{ height: rowHeight }}>
+                  {table.getAllLeafColumns().map((col) => (
+                    <td key={col.id} className="px-3">
+                      <div className="h-3 w-3/4 rounded bg-gray-500 animate-pulse" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          ) : (
+            <tbody>
+              {table.getRowModel().rows.flatMap((row) =>
+                [
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className={`
+              px-4 py-2 border border-b-0 border-gray-900 
               ${
                 cell.column.id === "pavadinimas"
                   ? "text  font-medium w-[470px]"
@@ -337,37 +333,43 @@ export default function Table() {
                   ? " font-medium w-[85px]"
                   : undefined
               }`}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>,
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>,
 
-              row.getIsExpanded() && (
-                  <tr key={`${row.id}-exp`}>
-  <td colSpan={table.getVisibleLeafColumns().length} className="p-0">
-    <div className="border-t bg-white/60">
-      <div className=" mb-3 rounded-b-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          {/* Summary */}
-          <div className="min-w-0 md:max-w-[80%]">
-            <p className="text-base font-semibold uppercase tracking-wider text-gray-500">
-              Dirbtinio intelekto išvada
-            </p>
-            <p className="mt-2 text-lg leading-relaxed text-gray-800 whitespace-pre-line">
-              {row.original.ai_summary ?? "—"}
-            </p>
-          </div>
+                  row.getIsExpanded() && (
+                    <tr key={`${row.id}-exp`}>
+                      <td
+                        colSpan={table.getVisibleLeafColumns().length}
+                        className="p-0 bg-white border-none"
+                      >
+                        <div className="border-t bg-white/60">
+                          <div className=" mb-3 rounded-b-xl border border-black overflow-hidden border-t-0 bg-white p-6 shadow-sm ">
+                            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                              {/* Summary */}
+                              <div className="min-w-0 md:max-w-[80%]">
+                                <p className="text-base font-semibold uppercase tracking-wider text-gray-500">
+                                  Dirbtinio intelekto išvada
+                                </p>
+                                <p className="mt-2 text-lg leading-relaxed text-gray-800 whitespace-pre-line">
+                                  {row.original.ai_summary ?? "—"}
+                                </p>
+                              </div>
 
-          {/* Risk panel */}
-          <div className="shrink-0 md:text-right">
-            <p className="text-base font-semibold uppercase tracking-wider text-gray-500">
-              Rizika
-            </p>
+                              {/* Risk panel */}
+                              <div className="shrink-0 md:text-right">
+                                <p className="text-base font-semibold uppercase tracking-wider text-gray-500 font-mono">
+                                  Rizika
+                                </p>
 
-            {/* score badge */}
-            <span
-              className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset
+                                {/* score badge */}
+                                <span
+                                  className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset
                 ${
                   !row.original.ai_risk_score
                     ? "bg-gray-100 text-gray-700 ring-gray-200"
@@ -377,16 +379,20 @@ export default function Table() {
                     ? "bg-yellow-100 text-yellow-800 ring-yellow-200"
                     : "bg-green-100 text-green-700 ring-green-200"
                 }`}
-            >
-              {Number.isFinite(parseFloat(row.original.ai_risk_score ?? ""))
-                ? parseFloat(row.original.ai_risk_score!).toFixed(3)
-                : "—"}
-            </span>
+                                >
+                                  {Number.isFinite(
+                                    parseFloat(row.original.ai_risk_score ?? "")
+                                  )
+                                    ? parseFloat(
+                                        row.original.ai_risk_score!
+                                      ).toFixed(3)
+                                    : "—"}
+                                </span>
 
-            {/* progress bar (width via Tailwind fractions, no inline style) */}
-            <div className="mt-2 h-2 w-40 rounded-full bg-gray-200">
-              <div
-                className={`h-2 rounded-full
+                                {/* progress bar (width via Tailwind fractions, no inline style) */}
+                                <div className="mt-2 h-2 w-40 rounded-full bg-gray-200">
+                                  <div
+                                    className={`h-2 rounded-full
                   ${
                     !row.original.ai_risk_score
                       ? "w-0 bg-gray-300"
@@ -400,27 +406,32 @@ export default function Table() {
                       ? "w-2/5 bg-green-500"
                       : "w-1/5 bg-green-500"
                   }`}
-              />
-            </div>
-          </div>
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ),
+                ].filter(Boolean)
+              )}
+            </tbody>
+          )}
+        </table>
+
+        <div className=" bg-zinc-700 rounded-t-none rounded-lg w-full border h-24 offset  flex items-center justify-center mb-10">
+          <Paggination
+            pageIndex={pageIndex}
+            isLoading={isLoading}
+            totalRows={totalRows}
+            table={table}
+            pageSize={pageSize}
+            setPageIndex={setPageIndex}
+          />
         </div>
       </div>
-    </div>
-  </td>
-</tr>
-
-              ),
-            ].filter(Boolean)
-          )}
-        </tbody>
-        )
-        }
-      </table>
-      
-     <div className=" bg-zinc-700 rounded-t-none rounded-lg w-full border h-24 offset  flex items-center justify-center mb-10">
-          <Paggination pageIndex={pageIndex} isLoading={isLoading} totalRows={totalRows} table={table} pageSize={pageSize} setPageIndex={setPageIndex}/>
-      </div>
-    </div>
     </>
   );
 }
