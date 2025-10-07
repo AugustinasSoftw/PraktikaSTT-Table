@@ -152,7 +152,7 @@ export default function Table() {
   const prevQsRef = useRef(qs);
   //Loading
   const [isLoading, setIsLoading] = useState(true);
-  const pageSize = 6;
+  const pageSize = 20;
   const rowHeight = 74;
   // Filter hook
   const [openFilter, setOpenFilter] = useState(false);
@@ -245,7 +245,7 @@ export default function Table() {
             value ? (
               <div  onClick={() =>
                     setSorting(prev => (prev ? { ...prev, [key]: "" } : prev))
-                  } key={i} className="flex items-center gap-1 border border-white rounded-lg px-3 py-1 cursor-pointer">
+                  } key={i} className="flex items-center gap-1 border border-gray-400 rounded-lg px-3 py-1 cursor-pointer bg-zinc-800/95">
                 <span>{String(value)}</span>
                   <IoMdCloseCircleOutline size={18}/>
               </div>
