@@ -5,18 +5,25 @@ import asyncio
 import os
 import re
 from typing import List, Dict, Optional
+from pathlib import Path
+from urllib.parse import urlparse
 
 from playwright.async_api import async_playwright
 from psycopg2 import connect
 from psycopg2.extras import execute_batch
+from dotenv import load_dotenv, find_dotenv
+
+# ----- load .env that sits next to this file (backend/.env) -----
+env_path = find_dotenv(filename=".env", usecwd=True) or str(Path(__file__).with_name(".env"))
+load_dotenv(env_path)
+
+DB_DSN = (os.getenv("DB_DSN") or os.getenv("DATABASE_URL") or "").strip()
+DB_DSN = DB_DSN.strip().strip('"').strip("'")           # remove accidental wrapping quotes
+
 
 # --------- CONFIG ---------
 SEARCH_URL = "https://www.e-tar.lt/portal/lt/legalActSearch"
 
-# Put your real connection here OR set env var DB_DSN
-DB_DSN = os.getenv(
-    "DB_DSN", "dbname=appdb user=appuser password=appsecret host=localhost port=5432"
-)
 
 # JSF ids contain ":" -> must be escaped in CSS with "\\:"
 THEAD_SEL = "thead#contentForm\\:resultsTable_head"

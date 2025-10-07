@@ -1,0 +1,98 @@
+{
+  "id": "4f372b61-cd30-4ce6-91b9-393442dccc95",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.sprendimai": {
+      "name": "sprendimai",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "eil_nr": {
+          "name": "eil_nr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rusis": {
+          "name": "rusis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pavadinimas": {
+          "name": "pavadinimas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "istaigos_nr": {
+          "name": "istaigos_nr",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "priemimo_data": {
+          "name": "priemimo_data",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "isigaliojimo_data": {
+          "name": "isigaliojimo_data",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "projektai_nuoroda": {
+          "name": "projektai_nuoroda",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scraped_at": {
+          "name": "scraped_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ai_risk_score": {
+          "name": "ai_risk_score",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ai_summary": {
+          "name": "ai_summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

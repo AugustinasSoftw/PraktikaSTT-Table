@@ -2,14 +2,19 @@ import psycopg2
 from google import genai
 import json
 from google.genai.errors import ServerError, APIError
-
+from dotenv import load_dotenv, find_dotenv
+import os
 
 # Gemini client
 client = genai.Client(api_key="AIzaSyBIlyyKlXhGrfFpJkQO41RKRpGuaY4B-mk")
 
+load_dotenv(find_dotenv())
+DB_DSN = (os.getenv("DB_DSN") or os.getenv("DATABASE_URL") or "").strip()
+
+
 # Process 10 batches; each batch reads 2 rows, updates them, then moves to the next 2
 with psycopg2.connect(
-    dbname="appdb", user="appuser", password="appsecret", host="localhost", port="5432"
+    DB_DSN
 ) as conn:
     with conn.cursor() as cur:
         for _ in range(15):  # or while True
