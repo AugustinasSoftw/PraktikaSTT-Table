@@ -152,7 +152,7 @@ export default function Table() {
   const prevQsRef = useRef(qs);
   //Loading
   const [isLoading, setIsLoading] = useState(true);
-  const pageSize = 20;
+  const pageSize = 10;
   const rowHeight = 74;
   // Filter hook
   const [openFilter, setOpenFilter] = useState(false);

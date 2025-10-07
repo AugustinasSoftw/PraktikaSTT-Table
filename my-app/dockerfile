@@ -1,0 +1,27 @@
+# frontend/Dockerfile
+# ---- build stage ----
+FROM node:20-slim AS build
+WORKDIR /app
+
+# choose ONE package manager; since you kept package-lock.json, we use npm
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+# If you use env vars at build time (NEXT_PUBLIC_*) add them here via ARG/ENV
+RUN npm run build
+
+# ---- runtime stage ----
+FROM node:20-slim AS runtime
+ENV NODE_ENV=production
+WORKDIR /app
+
+# Next standalone output
+# (created by `next build` when "output: 'standalone'" is set in next.config.js)
+COPY --from=build /app/.next/standalone ./ 
+COPY --from=build /app/.next/static ./.next/static
+COPY --from=build /app/public ./public
+
+# Next standalone server.js lives at /app/server.js
+EXPOSE 3000
+CMD ["node", "server.js"]

@@ -1,0 +1,12 @@
+services:
+  backend:
+    build: { context: ./backend }
+    command: ["python","WebScape.py"]    # or Alfilter.py
+    env_file: [backend/.env]
+    restart: "no"
+
+  frontend:
+    build: { context: ./my-app }
+    env_file: [my-app/.env]
+    ports: ["3000:3000"]
+    restart: always

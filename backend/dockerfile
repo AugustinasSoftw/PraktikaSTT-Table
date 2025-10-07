@@ -1,0 +1,25 @@
+# backend/Dockerfile
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# System deps (psycopg2 etc.). Add others if needed.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc libpq-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 1) install python deps
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 2) copy your scraper code
+COPY . .
+
+# OPTIONAL: if you use Playwright (Python) for scraping, uncomment:
+# RUN python -m playwright install --with-deps chromium
+
+# Default command (can be overridden in compose)
+CMD ["python", "WebScape.py"]

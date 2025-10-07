@@ -45,6 +45,7 @@ const [{ count }] = await (
     : db.select({ count: sql<number>`count(*)` }).from(TAtable)
 );
 
+    await new Promise((resolve) => setTimeout(resolve, 350));
 
    return NextResponse.json({
     rows,
