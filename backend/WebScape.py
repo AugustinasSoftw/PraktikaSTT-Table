@@ -14,11 +14,13 @@ from psycopg2.extras import execute_batch
 from dotenv import load_dotenv, find_dotenv
 
 # ----- load .env that sits next to this file (backend/.env) -----
-env_path = find_dotenv(filename=".env", usecwd=True) or str(Path(__file__).with_name(".env"))
+env_path = find_dotenv(filename=".env", usecwd=True) or str(
+    Path(__file__).with_name(".env")
+)
 load_dotenv(env_path)
 
 DB_DSN = (os.getenv("DB_DSN") or os.getenv("DATABASE_URL") or "").strip()
-DB_DSN = DB_DSN.strip().strip('"').strip("'")           # remove accidental wrapping quotes
+DB_DSN = DB_DSN.strip().strip('"').strip("'")  # remove accidental wrapping quotes
 
 
 # --------- CONFIG ---------
@@ -157,7 +159,9 @@ def save_rows(rows: List[Dict], dsn: str) -> int:
 # --------- MAIN ---------
 async def main():
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, slow_mo=250)
+        browser = await p.chromium.launch(
+            headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"]
+        )
         page = await browser.new_page(
             locale="lt-LT", viewport={"width": 1280, "height": 900}
         )

@@ -2,24 +2,30 @@
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    # store browsers inside the image (avoids re-download on each run)
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 WORKDIR /app
 
-# System deps (psycopg2 etc.). Add others if needed.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# --- system deps (psycopg2 + curl). Minimal because playwright will install its own deps.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
     build-essential gcc libpq-dev curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 1) install python deps
+# --- python deps first (caches better)
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
 
-# 2) copy your scraper code
+# --- playwright + chromium and its OS deps baked into the image
+RUN python -m pip install playwright \
+    && python -m playwright install --with-deps chromium
+
+# --- copy your code
 COPY . .
 
-# OPTIONAL: if you use Playwright (Python) for scraping, uncomment:
-# RUN python -m playwright install --with-deps chromium
-
-# Default command (can be overridden in compose)
-CMD ["python", "WebScape.py"]
+# Default command (Render will override with the Cron/Worker command)
+CMD ["python", "-c", "print('Backend image built. Override command in Render.')"]
