@@ -20,10 +20,11 @@ try{
    const MAX_LIMIT = 100;
 
    const limit = Number.isFinite(rawLimit)
-      ? Math.min(Math.max(rawLimit, 1), MAX_LIMIT)
+      ? Math.min(Math.max(rawLimit, 10), MAX_LIMIT)
       : DEFAULT_LIMIT;
 
-   const order = desc(TAtable.priemimo_data);
+   const orderPrimary = desc(TAtable.priemimo_data); 
+   const orderTie     = desc(TAtable.id);   
    const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
    const whereRusys = rusys ? ilike(TAtable.rusis, `%${rusys}`) : undefined;
    const whereRisk = highRisk ? gte(TAtable.ai_risk_score, '0.7') : undefined; 
@@ -34,8 +35,8 @@ const whereAll =
 // rows
 const rows = await (
   whereAll
-    ? db.select().from(TAtable).where(whereAll).orderBy(order).limit(limit).offset(offset)
-    : db.select().from(TAtable).limit(limit).orderBy(order).offset(offset)
+    ? db.select().from(TAtable).where(whereAll).orderBy(orderPrimary, orderTie).limit(limit).offset(offset)
+    : (await db.select().from(TAtable).orderBy(orderPrimary, orderTie).limit(limit).offset(offset))
 );
 
 // count

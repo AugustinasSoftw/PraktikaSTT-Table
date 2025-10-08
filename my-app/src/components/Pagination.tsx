@@ -28,9 +28,6 @@ export default function Paggination<TableRow>({
   const maxButtons = 10;
   const current = pageIndex + 1;
 
-
-  
-
   let start = Math.max(1, current - Math.floor((maxButtons - 1) / 2));
   let end = Math.min(totalPages, start + maxButtons - 1);
   start = Math.max(1, end - maxButtons + 1);
@@ -40,7 +37,11 @@ export default function Paggination<TableRow>({
 
   return (
     <div className="flex gap-2 items-center">
-      <button className="cursor-pointer" onClick={() => setPageIndex(0)} disabled={pageIndex < 1}>
+      <button
+        className="cursor-pointer"
+        onClick={() => setPageIndex(0)}
+        disabled={pageIndex < 1}
+      >
         <BackBackButton disabled={pageIndex < 1} />
       </button>
       <button
