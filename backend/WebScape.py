@@ -160,10 +160,23 @@ def save_rows(rows: List[Dict], dsn: str) -> int:
 async def main():
     async with async_playwright() as p:
         browser = await p.chromium.launch(
-            headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"]
+            headless=True,
+            args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+            ],
         )
         page = await browser.new_page(
-            locale="lt-LT", viewport={"width": 1280, "height": 900}
+            viewport={
+                "width": 1366,
+                "height": 768,
+            },  # or 1920x1080 if that’s what works
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+            color_scheme="light",
+            locale="en-US",
+            device_scale_factor=1,
         )
 
         ensure_unique_constraint(DB_DSN)
